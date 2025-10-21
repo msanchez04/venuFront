@@ -6,6 +6,4 @@ The user can choose to generate an AI Summary of the concerts they have attended
 
 ### Screen Recording
 
-<video width="500" height="300" controls>
-  <source src="https://drive.google.com/file/d/1BbCG5Aer7tiYIfH5xlrviahqT5cPjQWu/view?usp=sharing" type="video/mp4">
-</video>
+[Venu Screen Recording](https://drive.google.com/file/d/1BbCG5Aer7tiYIfH5xlrviahqT5cPjQWu/view?usp=drive_link)
