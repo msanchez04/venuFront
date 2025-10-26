@@ -58,9 +58,14 @@ const handleLogin = async () => {
     const response = await userAccountAPI.login(form.email, form.password);
 
     if (response.success && response.user) {
-      message.value = `Login successful! Welcome, User ID: ${response.user}`;
+      message.value = `Login successful! Welcome, ${
+        response.userName || "User"
+      }!`;
       messageType.value = "success";
-      emit("user-logged-in", response.user);
+      emit("user-logged-in", {
+        userId: response.user,
+        userName: response.userName,
+      });
 
       // Reset form
       form.email = "";
@@ -140,4 +145,3 @@ button:disabled {
   border: 1px solid #f5c6cb;
 }
 </style>
-

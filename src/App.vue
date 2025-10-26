@@ -20,24 +20,24 @@ onMounted(() => {
   }
 });
 
-const handleUserRegistered = (userId) => {
+const handleUserRegistered = ({ userId, userName }) => {
   currentUserId.value = userId;
-  currentUserName.value = "User"; // Default name since we don't get it from registration
+  currentUserName.value = userName || "User";
   isLoggedIn.value = true;
 
   // Save to localStorage
   localStorage.setItem("venu_userId", userId);
-  localStorage.setItem("venu_userName", "User");
+  localStorage.setItem("venu_userName", currentUserName.value);
 };
 
-const handleUserLoggedIn = (userId) => {
+const handleUserLoggedIn = ({ userId, userName }) => {
   currentUserId.value = userId;
-  currentUserName.value = "User"; // Default name since we don't get it from login
+  currentUserName.value = userName || "User";
   isLoggedIn.value = true;
 
   // Save to localStorage
   localStorage.setItem("venu_userId", userId);
-  localStorage.setItem("venu_userName", "User");
+  localStorage.setItem("venu_userName", currentUserName.value);
 };
 
 const handleLogout = () => {

@@ -74,9 +74,9 @@ const handleRegister = async () => {
     );
 
     if (response.user) {
-      message.value = `Registration successful! User ID: ${response.user}`;
+      message.value = `Registration successful! Welcome, ${form.name}!`;
       messageType.value = "success";
-      emit("user-registered", response.user);
+      emit("user-registered", { userId: response.user, userName: form.name });
 
       // Reset form
       form.name = "";
@@ -157,4 +157,3 @@ button:disabled {
   border: 1px solid #f5c6cb;
 }
 </style>
-
