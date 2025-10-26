@@ -49,6 +49,11 @@ const handleLogout = () => {
   localStorage.removeItem("venu_userId");
   localStorage.removeItem("venu_userName");
 };
+
+const handleNameUpdated = (newName) => {
+  currentUserName.value = newName;
+  localStorage.setItem("venu_userName", newName);
+};
 </script>
 
 <template>
@@ -83,6 +88,7 @@ const handleLogout = () => {
       :user-id="currentUserId"
       :user-name="currentUserName"
       @logout="handleLogout"
+      @name-updated="handleNameUpdated"
     />
   </div>
 </template>

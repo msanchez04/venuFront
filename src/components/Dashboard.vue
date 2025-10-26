@@ -2,7 +2,12 @@
   <div class="dashboard">
     <header class="dashboard-header">
       <h1>🎵 Welcome to Venu, {{ userName }}!</h1>
-      <button @click="handleLogout" class="logout-btn">Logout</button>
+      <div class="header-actions">
+        <button @click="showSettings = true" class="settings-btn">
+          ⚙️ Settings
+        </button>
+        <button @click="handleLogout" class="logout-btn">Logout</button>
+      </div>
     </header>
 
     <main class="dashboard-main">
@@ -334,18 +339,80 @@
         </div>
       </div>
     </div>
+
+    <!-- Account Settings Modal -->
+    <div v-if="showSettings" class="settings-modal" @click="closeSettings">
+      <div class="settings-backdrop"></div>
+      <div class="settings-content" @click.stop>
+        <button class="close-settings-btn" @click="closeSettings">
+          &times;
+        </button>
+        <h3>⚙️ Account Settings</h3>
+
+        <!-- Update Name Section -->
+        <div class="settings-section">
+          <h4>Update Display Name</h4>
+          <form @submit.prevent="handleUpdateName">
+            <div class="form-group">
+              <label for="newName">New Name:</label>
+              <input
+                id="newName"
+                v-model="settingsForm.newName"
+                type="text"
+                placeholder="Enter new name"
+                required
+              />
+            </div>
+            <button type="submit" :disabled="loading" class="submit-btn">
+              {{ loading ? "Updating..." : "Update Name" }}
+            </button>
+          </form>
+        </div>
+
+        <!-- Update Password Section -->
+        <div class="settings-section">
+          <h4>Change Password</h4>
+          <form @submit.prevent="handleUpdatePassword">
+            <div class="form-group">
+              <label for="currentPassword">Current Password:</label>
+              <input
+                id="currentPassword"
+                v-model="settingsForm.currentPassword"
+                type="password"
+                placeholder="Enter current password"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="newPassword">New Password:</label>
+              <input
+                id="newPassword"
+                v-model="settingsForm.newPassword"
+                type="password"
+                placeholder="Enter new password"
+                required
+              />
+            </div>
+            <button type="submit" :disabled="loading" class="submit-btn">
+              {{ loading ? "Updating..." : "Update Password" }}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from "vue";
 import {
+  userAccountAPI,
   concertEventAPI,
   mediaAlbumAPI,
   concertStatsAAPI,
 } from "../services/api.js";
 
-const emit = defineEmits(["logout"]);
+const emit = defineEmits(["logout", "name-updated"]);
 
 const props = defineProps({
   userId: String,
@@ -368,6 +435,7 @@ const fullSizeImageUrl = ref(null);
 const showAlbumGallery = ref(false);
 const currentGalleryIndex = ref(0);
 const currentMedia = ref(null);
+const showSettings = ref(false);
 
 // Forms
 const concertForm = reactive({
@@ -389,6 +457,12 @@ const mediaForm = reactive({
   dataUrl: "",
   fileName: "",
   type: "",
+});
+
+const settingsForm = reactive({
+  newName: "",
+  currentPassword: "",
+  newPassword: "",
 });
 
 // Methods
@@ -869,6 +943,74 @@ const viewFullImage = (imageUrl) => {
 
 const closeFullImage = () => {
   fullSizeImageUrl.value = null;
+};
+
+const closeSettings = () => {
+  showSettings.value = false;
+  settingsForm.newName = "";
+  settingsForm.currentPassword = "";
+  settingsForm.newPassword = "";
+};
+
+const handleUpdateName = async () => {
+  loading.value = true;
+  message.value = "";
+
+  try {
+    const response = await userAccountAPI.updateName(
+      props.userId,
+      settingsForm.newName
+    );
+
+    if (response.error) {
+      message.value = `Failed to update name: ${response.error}`;
+      messageType.value = "error";
+    } else {
+      message.value = "Name updated successfully!";
+      messageType.value = "success";
+
+      // Update the userName prop by emitting an event
+      emit("name-updated", settingsForm.newName);
+
+      // Close settings and reset form
+      settingsForm.newName = "";
+    }
+  } catch (error) {
+    message.value = `Failed to update name: ${error.message}`;
+    messageType.value = "error";
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleUpdatePassword = async () => {
+  loading.value = true;
+  message.value = "";
+
+  try {
+    const response = await userAccountAPI.updatePassword(
+      props.userId,
+      settingsForm.currentPassword,
+      settingsForm.newPassword
+    );
+
+    if (response.error) {
+      message.value = `Failed to update password: ${response.error}`;
+      messageType.value = "error";
+    } else {
+      message.value = "Password updated successfully!";
+      messageType.value = "success";
+
+      // Close settings and reset form
+      settingsForm.currentPassword = "";
+      settingsForm.newPassword = "";
+    }
+  } catch (error) {
+    message.value = `Failed to update password: ${error.message}`;
+    messageType.value = "error";
+  } finally {
+    loading.value = false;
+  }
 };
 
 onMounted(() => {
@@ -1474,6 +1616,103 @@ onMounted(() => {
 .delete-from-gallery-btn:hover {
   background: #c82333;
   transform: scale(1.05);
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.settings-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.settings-btn:hover {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+.settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.settings-content {
+  position: relative;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 4001;
+}
+
+.close-settings-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #f8f9fa;
+  color: #333;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.close-settings-btn:hover {
+  background: #e9ecef;
+  transform: rotate(90deg);
+}
+
+.settings-content h3 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+}
+
+.settings-section {
+  margin: 25px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #28a745;
+}
+
+.settings-section h4 {
+  margin: 0 0 15px 0;
+  color: #495057;
 }
 
 .ai-summary-section {

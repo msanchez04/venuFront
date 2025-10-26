@@ -38,6 +38,16 @@ export const userAccountAPI = {
 
   login: (email, password) =>
     apiCall("/userAccount/login", { email, password }),
+
+  updateName: (user, newName) =>
+    apiCall("/userAccount/updateName", { user, newName }),
+
+  updatePassword: (user, currentPassword, newPassword) =>
+    apiCall("/userAccount/updatePassword", {
+      user,
+      currentPassword,
+      newPassword,
+    }),
 };
 
 // ConcertEvent API calls
