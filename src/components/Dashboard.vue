@@ -335,6 +335,15 @@ const handleAddConcert = async () => {
 
     if (response.concert) {
       concerts.value.push(response.concert);
+
+      // Also log the concert to stats for AI summary
+      await concertStatsAAPI.logConcert(
+        props.userId,
+        concertForm.artist,
+        concertForm.venue,
+        concertForm.date
+      );
+
       message.value = "Concert created successfully!";
       messageType.value = "success";
       showAddConcert.value = false;
@@ -506,24 +515,16 @@ const handleUploadMedia = async () => {
 };
 
 const initializeStats = async () => {
-  loading.value = true;
-  message.value = "";
-
   try {
     const response = await concertStatsAAPI.initializeUser(props.userId);
 
-    if (response.error) {
-      message.value = `Failed to initialize stats: ${response.error}`;
-      messageType.value = "error";
-    } else {
-      message.value = "Stats tracking initialized successfully!";
-      messageType.value = "success";
+    // If error is "already exists", that's expected - silently ignore
+    if (response.error && !response.error.includes("already exists")) {
+      console.warn("Stats initialization:", response.error);
     }
   } catch (error) {
-    message.value = `Failed to initialize stats: ${error.message}`;
-    messageType.value = "error";
-  } finally {
-    loading.value = false;
+    // Silently ignore errors during initialization
+    console.debug("Stats initialization error:", error.message);
   }
 };
 
@@ -538,10 +539,27 @@ const generateSummary = async () => {
       message.value = `Failed to generate summary: ${response.error}`;
       messageType.value = "error";
     } else {
-      aiSummary.value =
-        "Your personalized concert statistics and recommendations have been generated based on your concert history.";
-      message.value = "AI summary generated successfully!";
-      messageType.value = "success";
+      // Fetch the generated summary and recommendations
+      const statsResponse = await concertStatsAAPI.getStatsRecord(props.userId);
+
+      if (statsResponse.error) {
+        message.value = `Failed to get summary: ${statsResponse.error}`;
+        messageType.value = "error";
+      } else {
+        const record = statsResponse.record;
+        let summaryText = record.summary || "";
+
+        if (record.recommendations && record.recommendations.length > 0) {
+          summaryText += "\n\nRecommendations:\n";
+          record.recommendations.forEach((rec, index) => {
+            summaryText += `${index + 1}. ${rec}\n`;
+          });
+        }
+
+        aiSummary.value = summaryText;
+        message.value = "AI summary generated successfully!";
+        messageType.value = "success";
+      }
     }
   } catch (error) {
     message.value = `Failed to generate summary: ${error.message}`;
@@ -555,7 +573,20 @@ const handleLogout = () => {
   emit("logout");
 };
 
+const loadConcerts = async () => {
+  try {
+    const response = await concertEventAPI.getConcertsByUser(props.userId);
+    if (response.concerts) {
+      concerts.value = response.concerts;
+    }
+  } catch (error) {
+    console.error("Failed to load concerts:", error);
+  }
+};
+
 onMounted(() => {
+  // Load existing concerts for the user
+  loadConcerts();
   // Initialize stats tracking when dashboard loads
   initializeStats();
 });

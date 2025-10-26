@@ -53,6 +53,9 @@ export const concertEventAPI = {
       newVenue,
       newCity,
     }),
+
+  getConcertsByUser: (user) =>
+    apiCall("/concertEvent/_getConcertsByUser", { user }),
 };
 
 // MediaAlbum API calls
@@ -84,4 +87,7 @@ export const concertStatsAAPI = {
 
   generateSummaryAI: (user) =>
     apiCall("/concertStatsAI/generateSummaryAI", { user }),
+
+  getStatsRecord: (user) =>
+    apiCall("/concertStatsAI/_getStatsRecord", { user }),
 };
