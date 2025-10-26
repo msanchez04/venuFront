@@ -56,6 +56,9 @@ export const concertEventAPI = {
 
   getConcertsByUser: (user) =>
     apiCall("/concertEvent/_getConcertsByUser", { user }),
+
+  deleteConcert: (user, concert) =>
+    apiCall("/concertEvent/deleteConcert", { user, concert }),
 };
 
 // MediaAlbum API calls
@@ -87,6 +90,14 @@ export const concertStatsAAPI = {
 
   logConcert: (user, artist, venue, date) =>
     apiCall("/concertStatsAI/logConcert", { user, artist, venue, date }),
+
+  removeConcertFromHistory: (user, artist, venue, date) =>
+    apiCall("/concertStatsAI/removeConcertFromHistory", {
+      user,
+      artist,
+      venue,
+      date,
+    }),
 
   generateSummaryAI: (user) =>
     apiCall("/concertStatsAI/generateSummaryAI", { user }),

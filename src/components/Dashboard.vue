@@ -100,6 +100,9 @@
                 <button @click="viewAlbum(concert)" class="view-btn">
                   View Album
                 </button>
+                <button @click="deleteConcert(concert)" class="delete-btn">
+                  🗑️ Delete
+                </button>
               </div>
             </div>
 
@@ -253,9 +256,6 @@
         <div class="ai-summary-section">
           <h3>🤖 AI Concert Statistics</h3>
           <div class="ai-actions">
-            <button @click="initializeStats" :disabled="loading" class="ai-btn">
-              {{ loading ? "Initializing..." : "Initialize Stats Tracking" }}
-            </button>
             <button @click="generateSummary" :disabled="loading" class="ai-btn">
               {{ loading ? "Generating..." : "Generate AI Summary" }}
             </button>
@@ -486,6 +486,62 @@ const cancelEdit = () => {
   Object.keys(editForm).forEach((key) => {
     editForm[key] = "";
   });
+};
+
+const deleteConcert = async (concert) => {
+  if (
+    !confirm(
+      `Are you sure you want to delete this concert: ${concert.artist}? This will also delete any associated media albums.`
+    )
+  ) {
+    return;
+  }
+
+  loading.value = true;
+  message.value = "";
+
+  try {
+    const response = await concertEventAPI.deleteConcert(
+      props.userId,
+      concert._id
+    );
+
+    if (response.error) {
+      message.value = `Failed to delete concert: ${response.error}`;
+      messageType.value = "error";
+    } else {
+      // Remove from local concerts array
+      concerts.value = concerts.value.filter((c) => c._id !== concert._id);
+
+      // Close the album if viewing this concert's album
+      if (selectedConcert.value && selectedConcert.value._id === concert._id) {
+        selectedConcert.value = null;
+        currentAlbum.value = null;
+        albumMedia.value = [];
+      }
+
+      // Also remove from AI stats history
+      try {
+        await concertStatsAAPI.removeConcertFromHistory(
+          props.userId,
+          concert.artist,
+          concert.venue,
+          concert.date
+        );
+      } catch (error) {
+        // Non-critical error, just log it
+        console.warn("Failed to remove concert from AI history:", error);
+      }
+
+      message.value = "Concert deleted successfully!";
+      messageType.value = "success";
+    }
+  } catch (error) {
+    message.value = `Failed to delete concert: ${error.message}`;
+    messageType.value = "error";
+  } finally {
+    loading.value = false;
+  }
 };
 
 const createAlbum = (concert) => {
@@ -996,7 +1052,8 @@ onMounted(() => {
 
 .edit-btn,
 .album-btn,
-.view-btn {
+.view-btn,
+.delete-btn {
   padding: 8px 16px;
   border: none;
   border-radius: 4px;
@@ -1017,6 +1074,15 @@ onMounted(() => {
 .view-btn {
   background: #6f42c1;
   color: white;
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #c82333;
 }
 
 .edit-modal {
@@ -1422,6 +1488,7 @@ onMounted(() => {
   display: flex;
   gap: 15px;
   margin-bottom: 20px;
+  justify-content: center;
 }
 
 .ai-btn {
