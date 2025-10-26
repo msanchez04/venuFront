@@ -76,6 +76,9 @@ export const mediaAlbumAPI = {
 
   getAlbumsByUserAndConcert: (user, concert) =>
     apiCall("/mediaAlbum/_getAlbumsByUserAndConcert", { user, concert }),
+
+  deleteMedia: (user, album, mediaId) =>
+    apiCall("/mediaAlbum/deleteMedia", { user, album, mediaId }),
 };
 
 // ConcertStatsAI API calls

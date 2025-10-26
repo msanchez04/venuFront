@@ -76,28 +76,147 @@
           <div
             v-for="concert in concerts"
             :key="concert._id"
-            class="concert-card"
+            class="concert-wrapper"
           >
-            <div class="concert-info">
-              <h4>{{ concert.artist }}</h4>
-              <p>
-                <strong>Date:</strong>
-                {{ new Date(concert.date).toLocaleString() }}
-              </p>
-              <p>
-                <strong>Venue:</strong> {{ concert.venue }}, {{ concert.city }}
-              </p>
+            <div class="concert-card">
+              <div class="concert-info">
+                <h4>{{ concert.artist }}</h4>
+                <p>
+                  <strong>Date:</strong>
+                  {{ new Date(concert.date).toLocaleString() }}
+                </p>
+                <p>
+                  <strong>Venue:</strong> {{ concert.venue }},
+                  {{ concert.city }}
+                </p>
+              </div>
+              <div class="concert-actions">
+                <button @click="editConcert(concert)" class="edit-btn">
+                  Edit
+                </button>
+                <button @click="createAlbum(concert)" class="album-btn">
+                  Create Album
+                </button>
+                <button @click="viewAlbum(concert)" class="view-btn">
+                  View Album
+                </button>
+              </div>
             </div>
-            <div class="concert-actions">
-              <button @click="editConcert(concert)" class="edit-btn">
-                Edit
-              </button>
-              <button @click="createAlbum(concert)" class="album-btn">
-                Create Album
-              </button>
-              <button @click="viewAlbum(concert)" class="view-btn">
-                View Album
-              </button>
+
+            <!-- Album displayed inline for this concert -->
+            <div
+              v-if="selectedConcert && selectedConcert._id === concert._id"
+              class="inline-album-section"
+            >
+              <h4>📸 Media Album for {{ concert.artist }}</h4>
+
+              <!-- Create Album -->
+              <div v-if="!currentAlbum" class="create-album">
+                <button
+                  @click="handleCreateAlbum"
+                  :disabled="loading"
+                  class="primary-btn"
+                >
+                  {{ loading ? "Creating..." : "Create Media Album" }}
+                </button>
+              </div>
+
+              <!-- Album Management -->
+              <div v-if="currentAlbum" class="album-management">
+                <div class="album-info">
+                  <p>
+                    Album created:
+                    {{ new Date(currentAlbum.createdAt).toLocaleString() }}
+                  </p>
+                </div>
+
+                <!-- Upload Media -->
+                <div class="upload-section">
+                  <h5>Upload Media</h5>
+                  <form @submit.prevent="handleUploadMedia">
+                    <div class="form-group">
+                      <label for="mediaFile">Select File:</label>
+                      <input
+                        id="mediaFile"
+                        type="file"
+                        accept="image/*,video/*"
+                        @change="handleFileSelect"
+                        ref="fileInput"
+                        required
+                      />
+                      <p v-if="mediaForm.fileName" class="selected-file">
+                        Selected: {{ mediaForm.fileName }}
+                      </p>
+                    </div>
+                    <div class="form-group">
+                      <label for="mediaType">Type:</label>
+                      <select id="mediaType" v-model="mediaForm.type" required>
+                        <option value="">Select type</option>
+                        <option value="photo">Photo</option>
+                        <option value="video">Video</option>
+                      </select>
+                    </div>
+                    <button
+                      type="submit"
+                      :disabled="loading || !mediaForm.file"
+                      class="submit-btn"
+                    >
+                      {{ loading ? "Uploading..." : "Upload Media" }}
+                    </button>
+                  </form>
+                </div>
+
+                <!-- View Media -->
+                <div v-if="albumMedia.length > 0" class="media-gallery">
+                  <h5>Media Items ({{ albumMedia.length }})</h5>
+                  <div class="media-grid">
+                    <div
+                      v-for="(item, index) in albumMedia"
+                      :key="index"
+                      class="media-item"
+                    >
+                      <div class="media-preview">
+                        <img
+                          v-if="item.type === 'photo' || item.type === 'Photo'"
+                          :src="item.url"
+                          :alt="`Photo ${index + 1}`"
+                          @error="handleImageError($event)"
+                          @load="console.log('Image loaded:', item.url)"
+                          @click="viewFullImage(item.url)"
+                          style="display: block; cursor: pointer"
+                          title="Click to view larger"
+                        />
+                        <video
+                          v-else-if="
+                            item.type === 'video' || item.type === 'Video'
+                          "
+                          :src="item.url"
+                          controls
+                          @error="handleVideoError($event)"
+                          style="display: block"
+                        ></video>
+                        <p v-else class="fallback-text">
+                          Media type: {{ item.type }}
+                        </p>
+                      </div>
+                      <div class="media-info">
+                        <p><strong>Type:</strong> {{ item.type }}</p>
+                        <p>
+                          <strong>Uploaded:</strong>
+                          {{ formatTimestamp(item.uploadTimestamp) }}
+                        </p>
+                        <button
+                          @click="deleteMediaItem(item.id)"
+                          class="delete-media-btn"
+                          title="Delete this media item"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -155,110 +274,6 @@
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-
-        <!-- Media Album Section -->
-        <div v-if="selectedConcert" class="album-section">
-          <h3>📸 Media Album for {{ selectedConcert.artist }}</h3>
-
-          <!-- Create Album -->
-          <div v-if="!currentAlbum" class="create-album">
-            <button
-              @click="handleCreateAlbum"
-              :disabled="loading"
-              class="primary-btn"
-            >
-              {{ loading ? "Creating..." : "Create Media Album" }}
-            </button>
-          </div>
-
-          <!-- Album Management -->
-          <div v-if="currentAlbum" class="album-management">
-            <div class="album-info">
-              <h4>Album ID: {{ currentAlbum._id }}</h4>
-              <p>
-                Created: {{ new Date(currentAlbum.createdAt).toLocaleString() }}
-              </p>
-            </div>
-
-            <!-- Upload Media -->
-            <div class="upload-section">
-              <h4>Upload Media</h4>
-              <form @submit.prevent="handleUploadMedia">
-                <div class="form-group">
-                  <label for="mediaFile">Select File:</label>
-                  <input
-                    id="mediaFile"
-                    type="file"
-                    accept="image/*,video/*"
-                    @change="handleFileSelect"
-                    ref="fileInput"
-                    required
-                  />
-                  <p v-if="mediaForm.fileName" class="selected-file">
-                    Selected: {{ mediaForm.fileName }}
-                  </p>
-                </div>
-                <div class="form-group">
-                  <label for="mediaType">Type:</label>
-                  <select id="mediaType" v-model="mediaForm.type" required>
-                    <option value="">Select type</option>
-                    <option value="photo">Photo</option>
-                    <option value="video">Video</option>
-                  </select>
-                </div>
-                <button
-                  type="submit"
-                  :disabled="loading || !mediaForm.file"
-                  class="submit-btn"
-                >
-                  {{ loading ? "Uploading..." : "Upload Media" }}
-                </button>
-              </form>
-            </div>
-
-            <!-- View Media -->
-            <div v-if="albumMedia.length > 0" class="media-gallery">
-              <h4>Media Items ({{ albumMedia.length }})</h4>
-              <div class="media-grid">
-                <div
-                  v-for="(item, index) in albumMedia"
-                  :key="index"
-                  class="media-item"
-                >
-                  <div class="media-preview">
-                    <img
-                      v-if="item.type === 'photo' || item.type === 'Photo'"
-                      :src="item.url"
-                      :alt="`Photo ${index + 1}`"
-                      @error="handleImageError($event)"
-                      @load="console.log('Image loaded:', item.url)"
-                      @click="viewFullImage(item.url)"
-                      style="display: block; cursor: pointer"
-                      title="Click to view larger"
-                    />
-                    <video
-                      v-else-if="item.type === 'video' || item.type === 'Video'"
-                      :src="item.url"
-                      controls
-                      @error="handleVideoError($event)"
-                      style="display: block"
-                    ></video>
-                    <p v-else class="fallback-text">
-                      Media type: {{ item.type }}
-                    </p>
-                  </div>
-                  <div class="media-info">
-                    <p><strong>Type:</strong> {{ item.type }}</p>
-                    <p>
-                      <strong>Uploaded:</strong>
-                      {{ formatTimestamp(item.uploadTimestamp) }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -549,12 +564,13 @@ const handleUploadMedia = async () => {
       message.value = `Failed to upload media: ${response.error}`;
       messageType.value = "error";
     } else {
-      // Add to local media array
-      albumMedia.value.push({
-        url: mediaForm.dataUrl,
-        type: mediaForm.type,
-        uploadTimestamp: new Date().toISOString(),
-      });
+      // Reload the album to get the updated media items with proper IDs
+      const albumResponse = await mediaAlbumAPI.getMediaAlbum(
+        currentAlbum.value._id
+      );
+      if (albumResponse.album) {
+        albumMedia.value = albumResponse.album.mediaItems || [];
+      }
 
       message.value = "Media uploaded successfully!";
       messageType.value = "success";
@@ -572,6 +588,39 @@ const handleUploadMedia = async () => {
     }
   } catch (error) {
     message.value = `Failed to upload media: ${error.message}`;
+    messageType.value = "error";
+  } finally {
+    loading.value = false;
+  }
+};
+
+const deleteMediaItem = async (mediaId) => {
+  if (!confirm("Are you sure you want to delete this media item?")) {
+    return;
+  }
+
+  loading.value = true;
+  message.value = "";
+
+  try {
+    const response = await mediaAlbumAPI.deleteMedia(
+      props.userId,
+      currentAlbum.value._id,
+      mediaId
+    );
+
+    if (response.error) {
+      message.value = `Failed to delete media: ${response.error}`;
+      messageType.value = "error";
+    } else {
+      // Remove from local media array
+      albumMedia.value = albumMedia.value.filter((item) => item.id !== mediaId);
+
+      message.value = "Media deleted successfully!";
+      messageType.value = "success";
+    }
+  } catch (error) {
+    message.value = `Failed to delete media: ${error.message}`;
     messageType.value = "error";
   } finally {
     loading.value = false;
@@ -813,15 +862,40 @@ onMounted(() => {
   margin-top: 30px;
 }
 
+.concert-wrapper {
+  margin-bottom: 30px;
+}
+
 .concert-card {
   background: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 8px;
   padding: 20px;
-  margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.inline-album-section {
+  background: white;
+  border: 2px solid #6f42c1;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 20px;
+  margin-top: -5px;
+}
+
+.inline-album-section h4 {
+  margin: 0 0 15px 0;
+  color: #6f42c1;
+  font-size: 1.1rem;
+}
+
+.inline-album-section h5 {
+  margin: 15px 0 10px 0;
+  color: #495057;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .concert-info h4 {
@@ -964,6 +1038,22 @@ onMounted(() => {
 .media-info {
   padding: 10px;
   font-size: 14px;
+}
+
+.delete-media-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.delete-media-btn:hover {
+  background: #c82333;
 }
 
 .fallback-text {
