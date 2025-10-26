@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import UserRegister from "./components/UserAccount/UserRegister.vue";
 import UserLogin from "./components/UserAccount/UserLogin.vue";
 import Dashboard from "./components/Dashboard.vue";
@@ -8,22 +8,46 @@ const isLoggedIn = ref(false);
 const currentUserId = ref("");
 const currentUserName = ref("");
 
+// Load session from localStorage on mount
+onMounted(() => {
+  const savedUserId = localStorage.getItem("venu_userId");
+  const savedUserName = localStorage.getItem("venu_userName");
+
+  if (savedUserId && savedUserName) {
+    currentUserId.value = savedUserId;
+    currentUserName.value = savedUserName;
+    isLoggedIn.value = true;
+  }
+});
+
 const handleUserRegistered = (userId) => {
   currentUserId.value = userId;
   currentUserName.value = "User"; // Default name since we don't get it from registration
   isLoggedIn.value = true;
+
+  // Save to localStorage
+  localStorage.setItem("venu_userId", userId);
+  localStorage.setItem("venu_userName", "User");
 };
 
 const handleUserLoggedIn = (userId) => {
   currentUserId.value = userId;
   currentUserName.value = "User"; // Default name since we don't get it from login
   isLoggedIn.value = true;
+
+  // Save to localStorage
+  localStorage.setItem("venu_userId", userId);
+  localStorage.setItem("venu_userName", "User");
 };
 
 const handleLogout = () => {
   isLoggedIn.value = false;
   currentUserId.value = "";
   currentUserName.value = "";
+
+  // Clear localStorage
+  localStorage.removeItem("venu_userId");
+  localStorage.removeItem("venu_userName");
 };
 </script>
 

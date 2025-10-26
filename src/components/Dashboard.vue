@@ -186,27 +186,33 @@
             <div class="upload-section">
               <h4>Upload Media</h4>
               <form @submit.prevent="handleUploadMedia">
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="mediaUrl">Media URL:</label>
-                    <input
-                      id="mediaUrl"
-                      v-model="mediaForm.url"
-                      type="url"
-                      required
-                      placeholder="Enter media URL"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label for="mediaType">Type:</label>
-                    <select id="mediaType" v-model="mediaForm.type" required>
-                      <option value="">Select type</option>
-                      <option value="photo">Photo</option>
-                      <option value="video">Video</option>
-                    </select>
-                  </div>
+                <div class="form-group">
+                  <label for="mediaFile">Select File:</label>
+                  <input
+                    id="mediaFile"
+                    type="file"
+                    accept="image/*,video/*"
+                    @change="handleFileSelect"
+                    ref="fileInput"
+                    required
+                  />
+                  <p v-if="mediaForm.fileName" class="selected-file">
+                    Selected: {{ mediaForm.fileName }}
+                  </p>
                 </div>
-                <button type="submit" :disabled="loading" class="submit-btn">
+                <div class="form-group">
+                  <label for="mediaType">Type:</label>
+                  <select id="mediaType" v-model="mediaForm.type" required>
+                    <option value="">Select type</option>
+                    <option value="photo">Photo</option>
+                    <option value="video">Video</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  :disabled="loading || !mediaForm.file"
+                  class="submit-btn"
+                >
                   {{ loading ? "Uploading..." : "Upload Media" }}
                 </button>
               </form>
@@ -223,21 +229,31 @@
                 >
                   <div class="media-preview">
                     <img
-                      v-if="item.type === 'photo'"
+                      v-if="item.type === 'photo' || item.type === 'Photo'"
                       :src="item.url"
                       :alt="`Photo ${index + 1}`"
+                      @error="handleImageError($event)"
+                      @load="console.log('Image loaded:', item.url)"
+                      @click="viewFullImage(item.url)"
+                      style="display: block; cursor: pointer"
+                      title="Click to view larger"
                     />
                     <video
-                      v-else-if="item.type === 'video'"
+                      v-else-if="item.type === 'video' || item.type === 'Video'"
                       :src="item.url"
                       controls
+                      @error="handleVideoError($event)"
+                      style="display: block"
                     ></video>
+                    <p v-else class="fallback-text">
+                      Media type: {{ item.type }}
+                    </p>
                   </div>
                   <div class="media-info">
                     <p><strong>Type:</strong> {{ item.type }}</p>
                     <p>
                       <strong>Uploaded:</strong>
-                      {{ new Date(item.uploadTimestamp).toLocaleString() }}
+                      {{ formatTimestamp(item.uploadTimestamp) }}
                     </p>
                   </div>
                 </div>
@@ -269,6 +285,19 @@
     <div v-if="message" :class="['message', messageType]">
       {{ message }}
     </div>
+
+    <!-- Full Size Image Modal -->
+    <div v-if="fullSizeImageUrl" class="image-modal" @click="closeFullImage">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content-large" @click.stop>
+        <button class="close-button" @click="closeFullImage">&times;</button>
+        <img
+          :src="fullSizeImageUrl"
+          alt="Full size image"
+          class="full-size-image"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -298,6 +327,8 @@ const currentAlbum = ref(null);
 const albumMedia = ref([]);
 const concerts = ref([]);
 const aiSummary = ref("");
+const fileInput = ref(null);
+const fullSizeImageUrl = ref(null);
 
 // Forms
 const concertForm = reactive({
@@ -315,7 +346,9 @@ const editForm = reactive({
 });
 
 const mediaForm = reactive({
-  url: "",
+  file: null,
+  dataUrl: "",
+  fileName: "",
   type: "",
 });
 
@@ -466,6 +499,7 @@ const viewAlbum = async (concert) => {
     if (response.albums && response.albums.length > 0) {
       currentAlbum.value = response.albums[0];
       albumMedia.value = currentAlbum.value.mediaItems || [];
+      console.log("Loaded album media:", albumMedia.value);
     } else {
       currentAlbum.value = null;
       albumMedia.value = [];
@@ -475,15 +509,38 @@ const viewAlbum = async (concert) => {
   }
 };
 
+const handleFileSelect = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    mediaForm.file = file;
+    mediaForm.fileName = file.name;
+
+    // Convert file to data URL for display
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      mediaForm.dataUrl = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
 const handleUploadMedia = async () => {
   loading.value = true;
   message.value = "";
 
+  if (!mediaForm.file || !mediaForm.dataUrl) {
+    message.value = "Please select a file first";
+    messageType.value = "error";
+    loading.value = false;
+    return;
+  }
+
   try {
+    // Use the data URL as the "URL" for storage
     const response = await mediaAlbumAPI.uploadMedia(
       props.userId,
       currentAlbum.value._id,
-      mediaForm.url,
+      mediaForm.dataUrl,
       new Date().toISOString(),
       mediaForm.type
     );
@@ -494,7 +551,7 @@ const handleUploadMedia = async () => {
     } else {
       // Add to local media array
       albumMedia.value.push({
-        url: mediaForm.url,
+        url: mediaForm.dataUrl,
         type: mediaForm.type,
         uploadTimestamp: new Date().toISOString(),
       });
@@ -503,8 +560,15 @@ const handleUploadMedia = async () => {
       messageType.value = "success";
 
       // Reset form
-      mediaForm.url = "";
+      mediaForm.file = null;
+      mediaForm.dataUrl = "";
+      mediaForm.fileName = "";
       mediaForm.type = "";
+
+      // Clear file input
+      if (fileInput.value) {
+        fileInput.value.value = "";
+      }
     }
   } catch (error) {
     message.value = `Failed to upload media: ${error.message}`;
@@ -582,6 +646,39 @@ const loadConcerts = async () => {
   } catch (error) {
     console.error("Failed to load concerts:", error);
   }
+};
+
+const formatTimestamp = (timestamp) => {
+  if (!timestamp) return "Unknown date";
+
+  // Handle both Date objects and ISO strings
+  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    console.warn("Invalid timestamp:", timestamp);
+    return "Invalid date";
+  }
+
+  return date.toLocaleString();
+};
+
+const handleImageError = (event) => {
+  console.error("Image failed to load:", event.target.src);
+  event.target.style.display = "none";
+};
+
+const handleVideoError = (event) => {
+  console.error("Video failed to load:", event.target.src);
+  event.target.style.display = "none";
+};
+
+const viewFullImage = (imageUrl) => {
+  fullSizeImageUrl.value = imageUrl;
+};
+
+const closeFullImage = () => {
+  fullSizeImageUrl.value = null;
 };
 
 onMounted(() => {
@@ -829,6 +926,15 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
+.selected-file {
+  margin-top: 10px;
+  padding: 8px;
+  background: #e7f3ff;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
 .media-gallery {
   background: white;
   padding: 20px;
@@ -858,6 +964,76 @@ onMounted(() => {
 .media-info {
   padding: 10px;
   font-size: 14px;
+}
+
+.fallback-text {
+  padding: 40px;
+  text-align: center;
+  color: #6c757d;
+}
+
+.image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+}
+
+.modal-content-large {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+  z-index: 2001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 30px;
+  cursor: pointer;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all 0.3s;
+}
+
+.close-button:hover {
+  background: #f0f0f0;
+  transform: scale(1.1);
+}
+
+.full-size-image {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 .ai-summary-section {
