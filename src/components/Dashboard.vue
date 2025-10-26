@@ -135,7 +135,7 @@
                   <h5>Upload Media</h5>
                   <form @submit.prevent="handleUploadMedia">
                     <div class="form-group">
-                      <label for="mediaFile">Select File:</label>
+                      <label for="mediaFile">Select File (max 5MB):</label>
                       <input
                         id="mediaFile"
                         type="file"
@@ -145,20 +145,14 @@
                         required
                       />
                       <p v-if="mediaForm.fileName" class="selected-file">
-                        Selected: {{ mediaForm.fileName }}
+                        Selected: {{ mediaForm.fileName }} ({{
+                          mediaForm.type
+                        }})
                       </p>
-                    </div>
-                    <div class="form-group">
-                      <label for="mediaType">Type:</label>
-                      <select id="mediaType" v-model="mediaForm.type" required>
-                        <option value="">Select type</option>
-                        <option value="photo">Photo</option>
-                        <option value="video">Video</option>
-                      </select>
                     </div>
                     <button
                       type="submit"
-                      :disabled="loading || !mediaForm.file"
+                      :disabled="loading || !mediaForm.file || !mediaForm.type"
                       class="submit-btn"
                     >
                       {{ loading ? "Uploading..." : "Upload Media" }}
@@ -166,55 +160,33 @@
                   </form>
                 </div>
 
-                <!-- View Media -->
-                <div v-if="albumMedia.length > 0" class="media-gallery">
-                  <h5>Media Items ({{ albumMedia.length }})</h5>
-                  <div class="media-grid">
+                <!-- Album Cover View -->
+                <div v-if="albumMedia.length > 0" class="album-cover-section">
+                  <h5>
+                    {{ albumMedia.length }} Media Item{{
+                      albumMedia.length !== 1 ? "s" : ""
+                    }}
+                  </h5>
+                  <div class="album-cover-grid">
                     <div
-                      v-for="(item, index) in albumMedia"
+                      v-for="(item, index) in albumMedia.slice(0, 4)"
                       :key="index"
-                      class="media-item"
+                      class="album-thumbnail"
+                      @click="openAlbumGallery(index)"
                     >
-                      <div class="media-preview">
-                        <img
-                          v-if="item.type === 'photo' || item.type === 'Photo'"
-                          :src="item.url"
-                          :alt="`Photo ${index + 1}`"
-                          @error="handleImageError($event)"
-                          @load="console.log('Image loaded:', item.url)"
-                          @click="viewFullImage(item.url)"
-                          style="display: block; cursor: pointer"
-                          title="Click to view larger"
-                        />
-                        <video
-                          v-else-if="
-                            item.type === 'video' || item.type === 'Video'
-                          "
-                          :src="item.url"
-                          controls
-                          @error="handleVideoError($event)"
-                          style="display: block"
-                        ></video>
-                        <p v-else class="fallback-text">
-                          Media type: {{ item.type }}
-                        </p>
-                      </div>
-                      <div class="media-info">
-                        <p><strong>Type:</strong> {{ item.type }}</p>
-                        <p>
-                          <strong>Uploaded:</strong>
-                          {{ formatTimestamp(item.uploadTimestamp) }}
-                        </p>
-                        <button
-                          @click="deleteMediaItem(item.id)"
-                          class="delete-media-btn"
-                          title="Delete this media item"
-                        >
-                          🗑️ Delete
-                        </button>
+                      <img
+                        v-if="item.type === 'photo' || item.type === 'Photo'"
+                        :src="item.url"
+                        :alt="`Photo ${index + 1}`"
+                      />
+                      <div v-else class="video-thumbnail">
+                        <span>🎥</span>
                       </div>
                     </div>
                   </div>
+                  <button @click="openAlbumGallery(0)" class="view-album-btn">
+                    📖 Open Album ({{ albumMedia.length }} items)
+                  </button>
                 </div>
               </div>
             </div>
@@ -301,16 +273,65 @@
       {{ message }}
     </div>
 
-    <!-- Full Size Image Modal -->
-    <div v-if="fullSizeImageUrl" class="image-modal" @click="closeFullImage">
-      <div class="modal-backdrop"></div>
-      <div class="modal-content-large" @click.stop>
-        <button class="close-button" @click="closeFullImage">&times;</button>
-        <img
-          :src="fullSizeImageUrl"
-          alt="Full size image"
-          class="full-size-image"
-        />
+    <!-- Album Gallery Modal -->
+    <div
+      v-if="showAlbumGallery"
+      class="gallery-modal"
+      @click="closeAlbumGallery"
+    >
+      <div class="gallery-backdrop"></div>
+      <div class="gallery-content" @click.stop>
+        <button class="close-gallery-btn" @click="closeAlbumGallery">
+          &times;
+        </button>
+        <div class="gallery-main">
+          <button
+            v-if="currentGalleryIndex > 0"
+            @click="prevMedia"
+            class="gallery-nav gallery-prev"
+          >
+            ‹
+          </button>
+
+          <div class="gallery-media-container">
+            <img
+              v-if="
+                currentMedia &&
+                (currentMedia.type === 'photo' || currentMedia.type === 'Photo')
+              "
+              :src="currentMedia.url"
+              alt="Gallery image"
+              class="gallery-media"
+            />
+            <video
+              v-else-if="
+                currentMedia &&
+                (currentMedia.type === 'video' || currentMedia.type === 'Video')
+              "
+              :src="currentMedia.url"
+              controls
+              class="gallery-media"
+            ></video>
+          </div>
+
+          <button
+            v-if="currentGalleryIndex < albumMedia.length - 1"
+            @click="nextMedia"
+            class="gallery-nav gallery-next"
+          >
+            ›
+          </button>
+        </div>
+        <div class="gallery-info">
+          <p>{{ currentGalleryIndex + 1 }} / {{ albumMedia.length }}</p>
+          <button
+            v-if="currentMedia"
+            @click="deleteMediaItem(currentMedia.id)"
+            class="delete-from-gallery-btn"
+          >
+            🗑️ Delete this item
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -344,6 +365,9 @@ const concerts = ref([]);
 const aiSummary = ref("");
 const fileInput = ref(null);
 const fullSizeImageUrl = ref(null);
+const showAlbumGallery = ref(false);
+const currentGalleryIndex = ref(0);
+const currentMedia = ref(null);
 
 // Forms
 const concertForm = reactive({
@@ -527,8 +551,31 @@ const viewAlbum = async (concert) => {
 const handleFileSelect = (event) => {
   const file = event.target.files[0];
   if (file) {
+    // Check file size - limit to 5MB to avoid MongoDB 16MB BSON limit
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      message.value = "File too large. Please upload images smaller than 5MB.";
+      messageType.value = "error";
+      // Clear the file input
+      if (fileInput.value) {
+        fileInput.value.value = "";
+      }
+      mediaForm.file = null;
+      mediaForm.fileName = "";
+      mediaForm.dataUrl = "";
+      mediaForm.type = "";
+      return;
+    }
+
     mediaForm.file = file;
     mediaForm.fileName = file.name;
+
+    // Auto-detect type from file
+    if (file.type.startsWith("image/")) {
+      mediaForm.type = "photo";
+    } else if (file.type.startsWith("video/")) {
+      mediaForm.type = "video";
+    }
 
     // Convert file to data URL for display
     const reader = new FileReader();
@@ -615,6 +662,18 @@ const deleteMediaItem = async (mediaId) => {
     } else {
       // Remove from local media array
       albumMedia.value = albumMedia.value.filter((item) => item.id !== mediaId);
+
+      // If in gallery mode, update the gallery
+      if (showAlbumGallery.value) {
+        if (albumMedia.value.length === 0) {
+          closeAlbumGallery();
+        } else if (currentGalleryIndex.value >= albumMedia.value.length) {
+          currentGalleryIndex.value = albumMedia.value.length - 1;
+          currentMedia.value = albumMedia.value[currentGalleryIndex.value];
+        } else {
+          currentMedia.value = albumMedia.value[currentGalleryIndex.value];
+        }
+      }
 
       message.value = "Media deleted successfully!";
       messageType.value = "success";
@@ -720,6 +779,32 @@ const handleImageError = (event) => {
 const handleVideoError = (event) => {
   console.error("Video failed to load:", event.target.src);
   event.target.style.display = "none";
+};
+
+const openAlbumGallery = (startIndex) => {
+  currentGalleryIndex.value = startIndex;
+  currentMedia.value = albumMedia.value[startIndex];
+  showAlbumGallery.value = true;
+};
+
+const closeAlbumGallery = () => {
+  showAlbumGallery.value = false;
+  currentGalleryIndex.value = 0;
+  currentMedia.value = null;
+};
+
+const nextMedia = () => {
+  if (currentGalleryIndex.value < albumMedia.value.length - 1) {
+    currentGalleryIndex.value++;
+    currentMedia.value = albumMedia.value[currentGalleryIndex.value];
+  }
+};
+
+const prevMedia = () => {
+  if (currentGalleryIndex.value > 0) {
+    currentGalleryIndex.value--;
+    currentMedia.value = albumMedia.value[currentGalleryIndex.value];
+  }
 };
 
 const viewFullImage = (imageUrl) => {
@@ -1124,6 +1209,205 @@ onMounted(() => {
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Album Cover Styles */
+.album-cover-section {
+  margin-top: 20px;
+}
+
+.album-cover-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.album-thumbnail {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 2px solid #dee2e6;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: #f8f9fa;
+}
+
+.album-thumbnail:hover {
+  transform: scale(1.05);
+  border-color: #6f42c1;
+  box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+}
+
+.album-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-thumbnail {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+}
+
+.view-album-btn {
+  width: 100%;
+  background: #6f42c1;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.view-album-btn:hover {
+  background: #5a32a3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(111, 66, 193, 0.4);
+}
+
+/* Gallery Modal Styles */
+.gallery-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gallery-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.gallery-content {
+  position: relative;
+  width: 95%;
+  height: 95%;
+  max-width: 1400px;
+  max-height: 900px;
+  background: rgba(20, 20, 20, 0.98);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  z-index: 3001;
+}
+
+.close-gallery-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  z-index: 3002;
+}
+
+.close-gallery-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.gallery-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  position: relative;
+}
+
+.gallery-media-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 90%;
+  max-height: 80vh;
+}
+
+.gallery-media {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.gallery-nav {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  font-size: 60px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  line-height: 1;
+}
+
+.gallery-nav:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+
+.gallery-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  color: white;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.gallery-info p {
+  margin: 0;
+  font-size: 16px;
+}
+
+.delete-from-gallery-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.delete-from-gallery-btn:hover {
+  background: #c82333;
+  transform: scale(1.05);
 }
 
 .ai-summary-section {
