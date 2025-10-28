@@ -93,7 +93,7 @@ const handleCreateAlbum = async () => {
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  background: #f9f9f9;
+  background: #f4eeff;
 }
 
 .form-group {
@@ -151,7 +151,7 @@ button:disabled {
 .album-result {
   margin-top: 20px;
   padding: 15px;
-  background: #e7f3ff;
+  background: #dcd6f7;
   border: 1px solid #b3d9ff;
   border-radius: 4px;
 }
@@ -165,4 +165,3 @@ button:disabled {
   margin: 5px 0;
 }
 </style>
-

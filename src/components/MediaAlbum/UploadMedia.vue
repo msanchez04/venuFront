@@ -131,7 +131,7 @@ const handleUploadMedia = async () => {
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  background: #f9f9f9;
+  background: #f4eeff;
 }
 
 .form-group {
@@ -156,7 +156,7 @@ select {
 button {
   width: 100%;
   padding: 10px;
-  background: #6f42c1;
+  background: #424874;
   color: white;
   border: none;
   border-radius: 4px;
@@ -187,4 +187,3 @@ button:disabled {
   border: 1px solid #f5c6cb;
 }
 </style>
-

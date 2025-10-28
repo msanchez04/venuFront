@@ -90,7 +90,7 @@ const handleLogin = async () => {
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  background: #f9f9f9;
+  background: #f4eeff;
 }
 
 .form-group {
@@ -114,7 +114,7 @@ input {
 button {
   width: 100%;
   padding: 10px;
-  background: #28a745;
+  background: #a6b1e1;
   color: white;
   border: none;
   border-radius: 4px;

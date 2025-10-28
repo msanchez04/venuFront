@@ -61,14 +61,14 @@ const handleNameUpdated = (newName) => {
     <!-- Login/Register Page -->
     <div v-if="!isLoggedIn" class="auth-page">
       <header class="auth-header">
-        <h1>🎵 Welcome to Venu</h1>
-        <p>Your Concert Management System</p>
+        <h1>Venu</h1>
+        <p>Your Personalized Concert Journal</p>
       </header>
 
       <main class="auth-main">
         <div class="auth-container">
           <div class="auth-section">
-            <h2>👤 Get Started</h2>
+            <h2>Get Started</h2>
             <div class="auth-components">
               <UserRegister @user-registered="handleUserRegistered" />
               <UserLogin @user-logged-in="handleUserLoggedIn" />
@@ -76,10 +76,6 @@ const handleNameUpdated = (newName) => {
           </div>
         </div>
       </main>
-
-      <footer class="auth-footer">
-        <p>Built with Vue.js 3 + Vite | Backend API: http://localhost:8000</p>
-      </footer>
     </div>
 
     <!-- Dashboard for Logged-in Users -->
@@ -100,13 +96,13 @@ const handleNameUpdated = (newName) => {
 
 .auth-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #a6b1e1 0%, #424874 100%);
   display: flex;
   flex-direction: column;
 }
 
 .auth-header {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(244, 238, 255, 0.95);
   padding: 40px 20px;
   text-align: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -114,27 +110,25 @@ const handleNameUpdated = (newName) => {
 
 .auth-header h1 {
   margin: 0 0 10px 0;
-  color: #2c3e50;
+  color: #424874;
   font-size: 3rem;
   font-weight: bold;
 }
 
 .auth-header p {
   margin: 0;
-  color: #6c757d;
+  color: #424874;
   font-size: 1.2rem;
 }
 
 .auth-main {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 40px 20px;
+  display: flex;
+  justify-content: center;
 }
 
 .auth-container {
-  max-width: 800px;
   width: 100%;
 }
 
@@ -142,21 +136,21 @@ const handleNameUpdated = (newName) => {
   background: rgba(255, 255, 255, 0.95);
   padding: 40px;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(66, 72, 116, 0.2);
 }
 
 .auth-section h2 {
   margin: 0 0 30px 0;
-  color: #2c3e50;
+  color: #424874;
   font-size: 1.8rem;
   text-align: center;
-  border-bottom: 3px solid #3498db;
+  border-bottom: 3px solid #a6b1e1;
   padding-bottom: 10px;
 }
 
 .auth-components {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 30px;
   align-items: start;
 }

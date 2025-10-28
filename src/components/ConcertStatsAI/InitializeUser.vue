@@ -72,7 +72,7 @@ const handleInitializeUser = async () => {
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  background: #f9f9f9;
+  background: #f4eeff;
 }
 
 .form-group {
@@ -127,4 +127,3 @@ button:disabled {
   border: 1px solid #f5c6cb;
 }
 </style>
-

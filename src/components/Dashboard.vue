@@ -106,7 +106,7 @@
                   View Album
                 </button>
                 <button @click="deleteConcert(concert)" class="delete-btn">
-                  🗑️ Delete
+                  Delete
                 </button>
               </div>
             </div>
@@ -1024,7 +1024,7 @@ onMounted(() => {
 <style scoped>
 .dashboard {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #a6b1e1 0%, #424874 100%);
   padding: 20px;
 }
 
@@ -1041,12 +1041,12 @@ onMounted(() => {
 
 .dashboard-header h1 {
   margin: 0;
-  color: #2c3e50;
+  color: #424874;
   font-size: 2rem;
 }
 
 .logout-btn {
-  background: #dc3545;
+  background: #ca6b75;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -1069,10 +1069,10 @@ onMounted(() => {
 
 .concert-management h2 {
   margin: 0 0 30px 0;
-  color: #2c3e50;
+  color: #424874;
   font-size: 1.8rem;
   text-align: center;
-  border-bottom: 3px solid #3498db;
+  border-bottom: 3px solid #a6b1e1;
   padding-bottom: 10px;
 }
 
@@ -1082,7 +1082,7 @@ onMounted(() => {
 }
 
 .primary-btn {
-  background: #007bff;
+  background: #a6b1e1;
   color: white;
   border: none;
   padding: 12px 24px;
@@ -1114,7 +1114,7 @@ onMounted(() => {
 .form-group label {
   margin-bottom: 5px;
   font-weight: bold;
-  color: #495057;
+  color: #424874;
 }
 
 .form-group input,
@@ -1126,7 +1126,7 @@ onMounted(() => {
 }
 
 .submit-btn {
-  background: #28a745;
+  background: #a6b1e1;
   color: white;
   border: none;
   padding: 12px 24px;
@@ -1134,6 +1134,10 @@ onMounted(() => {
   cursor: pointer;
   font-size: 16px;
   font-weight: bold;
+}
+
+.submit-btn:hover {
+  background: #424874;
 }
 
 .submit-btn:disabled {
@@ -1176,14 +1180,14 @@ onMounted(() => {
 
 .inline-album-section h5 {
   margin: 15px 0 10px 0;
-  color: #495057;
+  color: #424874;
   font-size: 1rem;
   font-weight: 600;
 }
 
 .concert-info h4 {
   margin: 0 0 10px 0;
-  color: #2c3e50;
+  color: #424874;
   font-size: 1.2rem;
 }
 
@@ -1204,22 +1208,22 @@ onMounted(() => {
 }
 
 .edit-btn {
-  background: #ffc107;
+  background: #ffe596;
   color: #212529;
 }
 
 .album-btn {
-  background: #17a2b8;
+  background: #6ba8b2;
   color: white;
 }
 
 .view-btn {
-  background: #6f42c1;
+  background: #424874;
   color: white;
 }
 
 .delete-btn {
-  background: #dc3545;
+  background: #ca6b75;
   color: white;
 }
 
@@ -1268,7 +1272,7 @@ onMounted(() => {
 }
 
 .album-section {
-  background: #e7f3ff;
+  background: #dcd6f7;
   border: 1px solid #b3d9ff;
   border-radius: 8px;
   padding: 20px;
@@ -1296,10 +1300,10 @@ onMounted(() => {
 .selected-file {
   margin-top: 10px;
   padding: 8px;
-  background: #e7f3ff;
+  background: #dcd6f7;
   border-radius: 4px;
   font-size: 14px;
-  color: #2c3e50;
+  color: #424874;
 }
 
 .media-gallery {
@@ -1464,7 +1468,7 @@ onMounted(() => {
 
 .view-album-btn {
   width: 100%;
-  background: #6f42c1;
+  background: #424874;
   color: white;
   border: none;
   padding: 12px;
@@ -1476,7 +1480,7 @@ onMounted(() => {
 }
 
 .view-album-btn:hover {
-  background: #5a32a3;
+  background: #a6b1e1;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(111, 66, 193, 0.4);
 }
@@ -1603,7 +1607,7 @@ onMounted(() => {
 }
 
 .delete-from-gallery-btn {
-  background: #dc3545;
+  background: #ca6b75;
   color: white;
   border: none;
   padding: 8px 16px;
@@ -1624,7 +1628,7 @@ onMounted(() => {
 }
 
 .settings-btn {
-  background: #28a745;
+  background: #a6b1e1;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -1636,9 +1640,9 @@ onMounted(() => {
 }
 
 .settings-btn:hover {
-  background: #218838;
+  background: #424874;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+  box-shadow: 0 4px 12px rgba(166, 177, 225, 0.4);
 }
 
 .settings-modal {
@@ -1699,7 +1703,7 @@ onMounted(() => {
 
 .settings-content h3 {
   margin: 0 0 20px 0;
-  color: #2c3e50;
+  color: #424874;
 }
 
 .settings-section {
@@ -1707,12 +1711,12 @@ onMounted(() => {
   padding: 20px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #28a745;
+  border-left: 4px solid #a6b1e1;
 }
 
 .settings-section h4 {
   margin: 0 0 15px 0;
-  color: #495057;
+  color: #424874;
 }
 
 .ai-summary-section {
@@ -1731,7 +1735,7 @@ onMounted(() => {
 }
 
 .ai-btn {
-  background: #e83e8c;
+  background: #b87996;
   color: white;
   border: none;
   padding: 12px 24px;
@@ -1749,7 +1753,7 @@ onMounted(() => {
   background: white;
   padding: 20px;
   border-radius: 6px;
-  border-left: 4px solid #28a745;
+  border-left: 4px solid #a6b1e1;
 }
 
 .message {

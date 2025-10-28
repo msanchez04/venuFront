@@ -190,7 +190,7 @@ const handleGetAlbumsByUserAndConcert = async () => {
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  background: #f9f9f9;
+  background: #f4eeff;
 }
 
 .album-lookup,
@@ -258,7 +258,7 @@ button:disabled {
 .albums-display {
   margin-top: 20px;
   padding: 20px;
-  background: #e7f3ff;
+  background: #dcd6f7;
   border: 1px solid #b3d9ff;
   border-radius: 8px;
 }
@@ -296,4 +296,3 @@ button:disabled {
   color: #0066cc;
 }
 </style>
-

@@ -83,7 +83,7 @@ const handleGenerateSummary = async () => {
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  background: #f9f9f9;
+  background: #f4eeff;
 }
 
 .form-group {
@@ -107,7 +107,7 @@ input {
 button {
   width: 100%;
   padding: 10px;
-  background: #e83e8c;
+  background: #b87996;
   color: white;
   border: none;
   border-radius: 4px;
@@ -151,4 +151,3 @@ button:disabled {
   color: #495057;
 }
 </style>
-
