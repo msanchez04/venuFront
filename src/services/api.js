@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
 
 /**
  * Generic API call function for all backend endpoints
@@ -8,7 +8,7 @@ const API_BASE_URL = "http://localhost:8000/api";
  */
 export async function apiCall(endpoint, data = {}) {
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -29,21 +29,21 @@ export async function apiCall(endpoint, data = {}) {
 }
 
 // Backend API is now available and working
-console.log("✅ Using real backend API at http://localhost:8000");
+console.log(`✅ Using backend API at ${API_BASE}`);
 
 // UserAccount API calls
 export const userAccountAPI = {
   register: (name, email, password) =>
-    apiCall("/userAccount/register", { name, email, password }),
+    apiCall("/UserAccount/register", { name, email, password }),
 
   login: (email, password) =>
-    apiCall("/userAccount/login", { email, password }),
+    apiCall("/UserAccount/login", { email, password }),
 
   updateName: (user, newName) =>
-    apiCall("/userAccount/updateName", { user, newName }),
+    apiCall("/UserAccount/updateName", { user, newName }),
 
   updatePassword: (user, currentPassword, newPassword) =>
-    apiCall("/userAccount/updatePassword", {
+    apiCall("/UserAccount/updatePassword", {
       user,
       currentPassword,
       newPassword,
@@ -53,10 +53,10 @@ export const userAccountAPI = {
 // ConcertEvent API calls
 export const concertEventAPI = {
   addConcert: (user, artist, date, venue, city) =>
-    apiCall("/concertEvent/addConcert", { user, artist, date, venue, city }),
+    apiCall("/ConcertEvent/addConcert", { user, artist, date, venue, city }),
 
   editConcertDetails: (concert, newArtist, newDate, newVenue, newCity) =>
-    apiCall("/concertEvent/editConcertDetails", {
+    apiCall("/ConcertEvent/editConcertDetails", {
       concert,
       newArtist,
       newDate,
@@ -65,19 +65,19 @@ export const concertEventAPI = {
     }),
 
   getConcertsByUser: (user) =>
-    apiCall("/concertEvent/_getConcertsByUser", { user }),
+    apiCall("/ConcertEvent/_getConcertsByUser", { user }),
 
   deleteConcert: (user, concert) =>
-    apiCall("/concertEvent/deleteConcert", { user, concert }),
+    apiCall("/ConcertEvent/deleteConcert", { user, concert }),
 };
 
 // MediaAlbum API calls
 export const mediaAlbumAPI = {
   createAlbum: (user, concert) =>
-    apiCall("/mediaAlbum/createAlbum", { user, concert }),
+    apiCall("/MediaAlbum/createAlbum", { user, concert }),
 
   uploadMedia: (user, album, url, uploadTimestamp, type) =>
-    apiCall("/mediaAlbum/uploadMedia", {
+    apiCall("/MediaAlbum/uploadMedia", {
       user,
       album,
       url,
@@ -85,24 +85,24 @@ export const mediaAlbumAPI = {
       type,
     }),
 
-  getMediaAlbum: (album) => apiCall("/mediaAlbum/_getMediaAlbum", { album }),
+  getMediaAlbum: (album) => apiCall("/MediaAlbum/_getMediaAlbum", { album }),
 
   getAlbumsByUserAndConcert: (user, concert) =>
-    apiCall("/mediaAlbum/_getAlbumsByUserAndConcert", { user, concert }),
+    apiCall("/MediaAlbum/_getAlbumsByUserAndConcert", { user, concert }),
 
   deleteMedia: (user, album, mediaId) =>
-    apiCall("/mediaAlbum/deleteMedia", { user, album, mediaId }),
+    apiCall("/MediaAlbum/deleteMedia", { user, album, mediaId }),
 };
 
 // ConcertStatsAI API calls
 export const concertStatsAAPI = {
-  initializeUser: (user) => apiCall("/concertStatsAI/initializeUser", { user }),
+  initializeUser: (user) => apiCall("/ConcertStatsAI/initializeUser", { user }),
 
   logConcert: (user, artist, venue, date) =>
-    apiCall("/concertStatsAI/logConcert", { user, artist, venue, date }),
+    apiCall("/ConcertStatsAI/logConcert", { user, artist, venue, date }),
 
   removeConcertFromHistory: (user, artist, venue, date) =>
-    apiCall("/concertStatsAI/removeConcertFromHistory", {
+    apiCall("/ConcertStatsAI/removeConcertFromHistory", {
       user,
       artist,
       venue,
@@ -110,8 +110,8 @@ export const concertStatsAAPI = {
     }),
 
   generateSummaryAI: (user) =>
-    apiCall("/concertStatsAI/generateSummaryAI", { user }),
+    apiCall("/ConcertStatsAI/generateSummaryAI", { user }),
 
   getStatsRecord: (user) =>
-    apiCall("/concertStatsAI/_getStatsRecord", { user }),
+    apiCall("/ConcertStatsAI/_getStatsRecord", { user }),
 };
